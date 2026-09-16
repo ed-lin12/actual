@@ -306,7 +306,8 @@ type SpecializedWidget =
   | FormulaWidget
   | SankeyWidget
   | AgeOfMoneyWidget
-  | BalanceForecastWidget;
+  | BalanceForecastWidget
+  | MortgagePayoffWidget;
 export type DashboardWidgetEntity = SpecializedWidget | CustomReportWidget;
 export type NewDashboardWidgetEntity = Omit<
   DashboardWidgetEntity,
@@ -420,5 +421,16 @@ export type BalanceForecastWidget = AbstractWidget<
     timeFrame?: TimeFrame;
     granularity?: 'Daily' | 'Monthly';
     source?: ForecastSource;
+  } | null
+>;
+
+export type MortgagePayoffWidget = AbstractWidget<
+  'mortgage-payoff-card',
+  {
+    name?: string;
+    accountId?: string;
+    annualInterestRate?: number;
+    monthlyPayment?: number;
+    extraMonthlyPayment?: number;
   } | null
 >;
