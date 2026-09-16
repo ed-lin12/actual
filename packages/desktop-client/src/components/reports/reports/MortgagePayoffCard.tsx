@@ -11,6 +11,7 @@ import type {
   MortgagePayoffWidget,
 } from '@actual-app/core/types/models';
 
+import { Link } from '#components/common/Link';
 import { FinancialText } from '#components/FinancialText';
 import { PrivacyFilter } from '#components/PrivacyFilter';
 import { NON_DRAGGABLE_AREA_CLASS_NAME } from '#components/reports/constants';
@@ -267,6 +268,19 @@ export function MortgagePayoffCard({
             Principal and interest only; escrow, taxes, and insurance are
             excluded.
           </Trans>
+        </View>
+        <View
+          className={NON_DRAGGABLE_AREA_CLASS_NAME}
+          style={{
+            marginTop: 'auto',
+            fontSize: 12,
+            color: theme.pageTextLight,
+            alignItems: 'flex-start',
+          }}
+        >
+          <Link variant="external" to="https://replit.com" linkColor="muted">
+            <Trans>Made with Replit</Trans>
+          </Link>
         </View>
       </View>
     </ReportCard>

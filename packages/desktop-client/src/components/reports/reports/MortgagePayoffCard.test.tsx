@@ -20,6 +20,25 @@ vi.mock('#hooks/useAccountBalances', () => ({
 }));
 
 describe('MortgagePayoffCard assumptions', () => {
+  it('shows the demo attribution even before setup', () => {
+    render(
+      <TestProviders>
+        <MortgagePayoffCard
+          widgetId="mortgage"
+          accounts={[]}
+          onMetaChange={vi.fn()}
+        />
+      </TestProviders>,
+    );
+
+    const attribution = screen.getByRole('link', {
+      name: 'Made with Replit',
+    });
+    expect(attribution).toHaveAttribute('href', 'https://replit.com');
+    expect(attribution).toHaveAttribute('target', '_blank');
+    expect(attribution).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
   it('keeps rapid edits together while saved metadata is still stale', () => {
     const onMetaChange = vi.fn();
     const renderCard = (meta: MortgagePayoffWidget['meta']) => (
@@ -163,6 +182,9 @@ describe('MortgagePayoffCard account binding', () => {
     });
     const { rerender } = render(renderCard('mortgage'));
     expect(screen.getByText('Estimated payoff')).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Made with Replit' }),
+    ).toBeInTheDocument();
 
     vi.mocked(useAccountBalances).mockReturnValue({
       mortgage: 0,
