@@ -251,7 +251,7 @@ export const DEFAULT_DASHBOARD_STATE: NewDashboardWidgetEntity[] = [
     width: 4,
     height: 2,
     x: 8,
-    y: 12,
+    y: 14,
     meta: {
       content:
         '## Dashboard Tips\n\nYou can add new widgets or edit existing widgets by using the buttons at the top of the page. Choose a widget type and customize it to fit your needs.\n\n**Moving cards:** Drag any card by its header to reposition it.\n\n**Deleting cards:** Click the three-dot menu on any card and select "Remove".',
@@ -260,7 +260,7 @@ export const DEFAULT_DASHBOARD_STATE: NewDashboardWidgetEntity[] = [
   {
     type: 'mortgage-payoff-card',
     width: 4,
-    height: 3,
+    height: 4,
     x: 8,
     y: 10,
     meta: {},

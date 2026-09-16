@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
@@ -25,6 +25,7 @@ import {
   calculateMortgagePayoff,
   getMortgagePrincipal,
 } from './mortgagePayoff';
+import { useMortgagePayoffMeta } from './useMortgagePayoffMeta';
 
 type MortgagePayoffCardProps = {
   widgetId: string;
@@ -51,12 +52,18 @@ export function MortgagePayoffCard({
   widgetId,
   isEditing,
   accounts,
-  meta = {},
+  meta: savedMeta,
   onMetaChange,
 }: MortgagePayoffCardProps) {
   const { t } = useTranslation();
   const format = useFormat();
   const [nameMenuOpen, setNameMenuOpen] = useState(false);
+  const [meta, updateMeta] = useMortgagePayoffMeta(savedMeta, onMetaChange);
+  // PercentInput reinitializes its text when this callback changes.
+  const updateInterestRate = useCallback(
+    (annualInterestRate: number) => updateMeta({ annualInterestRate }),
+    [updateMeta],
+  );
 
   const accountOptions = useMemo(
     () =>
@@ -71,14 +78,9 @@ export function MortgagePayoffCard({
   );
   const accountBalances = useAccountBalances(accountIds);
 
-  const selectedAccountId =
-    meta?.accountId ??
-    accounts.find(
-      account =>
-        !account.closed &&
-        (accountBalances[account.id] ?? Number.POSITIVE_INFINITY) < 0,
-    )?.id ??
-    '';
+  // Never infer an account from its balance: a payoff must not silently move
+  // these assumptions onto another debt.
+  const selectedAccountId = meta.accountId ?? '';
   const selectedAccount = accounts.find(
     account => account.id === selectedAccountId,
   );
@@ -102,10 +104,6 @@ export function MortgagePayoffCard({
   const hasAssumptions =
     meta?.annualInterestRate != null && meta.monthlyPayment != null;
 
-  const updateMeta = (changes: MortgagePayoffWidget['meta']) => {
-    onMetaChange({ ...meta, ...changes });
-  };
-
   return (
     <ReportCard
       widgetId={widgetId}
@@ -113,7 +111,16 @@ export function MortgagePayoffCard({
       disableClick={nameMenuOpen}
       onRename={() => setNameMenuOpen(true)}
     >
-      <View style={{ flex: 1, padding: 20, gap: 12 }}>
+      <View
+        style={{
+          flex: 1,
+          padding: 20,
+          gap: 12,
+          overflowY: 'auto',
+          overflowWrap: 'anywhere',
+          '& > *': { flexShrink: 0 },
+        }}
+      >
         <ReportCardName
           name={meta?.name || t('Mortgage payoff')}
           isEditing={nameMenuOpen}
@@ -133,7 +140,7 @@ export function MortgagePayoffCard({
             alignItems: 'flex-end',
           }}
         >
-          <View style={{ flex: '1 1 150px', minWidth: 130 }}>
+          <View style={{ flex: '1 1 150px', maxWidth: '100%' }}>
             <label
               htmlFor={`mortgage-account-${widgetId}`}
               style={{ ...styles.smallText, color: theme.pageTextLight }}
@@ -146,26 +153,24 @@ export function MortgagePayoffCard({
               defaultLabel={t('Select an account')}
               options={accountOptions}
               onChange={accountId => updateMeta({ accountId })}
-              style={{ width: '100%', marginTop: 4 }}
+              style={{ width: '100%', minWidth: 0, marginTop: 4 }}
             />
           </View>
-          <View style={{ width: 95 }}>
+          <View style={{ flex: '1 1 120px', maxWidth: '100%' }}>
             <label
               htmlFor={`mortgage-rate-${widgetId}`}
               style={{ ...styles.smallText, color: theme.pageTextLight }}
             >
-              <Trans>Interest rate</Trans>
+              <Trans>Annual interest rate</Trans>
             </label>
             <PercentInput
               id={`mortgage-rate-${widgetId}`}
               value={meta?.annualInterestRate ?? 0}
-              onUpdatePercent={annualInterestRate =>
-                updateMeta({ annualInterestRate })
-              }
-              style={{ width: '100%', marginTop: 4 }}
+              onUpdatePercent={updateInterestRate}
+              style={{ width: '100%', minWidth: 0, marginTop: 4 }}
             />
           </View>
-          <View style={{ width: 120 }}>
+          <View style={{ flex: '1 1 120px', maxWidth: '100%' }}>
             <label
               htmlFor={`mortgage-payment-${widgetId}`}
               style={{ ...styles.smallText, color: theme.pageTextLight }}
@@ -176,10 +181,10 @@ export function MortgagePayoffCard({
               id={`mortgage-payment-${widgetId}`}
               value={meta?.monthlyPayment ?? 0}
               onUpdate={monthlyPayment => updateMeta({ monthlyPayment })}
-              style={{ width: '100%', marginTop: 4 }}
+              style={{ width: '100%', minWidth: 0, marginTop: 4 }}
             />
           </View>
-          <View style={{ width: 120 }}>
+          <View style={{ flex: '1 1 120px', maxWidth: '100%' }}>
             <label
               htmlFor={`mortgage-extra-payment-${widgetId}`}
               style={{ ...styles.smallText, color: theme.pageTextLight }}
@@ -192,7 +197,7 @@ export function MortgagePayoffCard({
               onUpdate={extraMonthlyPayment =>
                 updateMeta({ extraMonthlyPayment })
               }
-              style={{ width: '100%', marginTop: 4 }}
+              style={{ width: '100%', minWidth: 0, marginTop: 4 }}
             />
           </View>
         </View>
@@ -220,8 +225,9 @@ export function MortgagePayoffCard({
         ) : !estimate ? (
           <EmptyState>
             <Trans>
-              The payment does not cover the estimated monthly interest. Adjust
-              the assumptions to continue.
+              Unable to estimate payoff. Use a nonnegative annual rate and extra
+              payment, and a monthly payment above zero that covers interest and
+              repays the balance within 100 years.
             </Trans>
           </EmptyState>
         ) : (
@@ -253,14 +259,15 @@ export function MortgagePayoffCard({
                 {{ accountName: selectedAccount.name }} and the assumptions
                 above.
               </Trans>
-              <br />
-              <Trans>
-                Principal and interest only; escrow, taxes, and insurance are
-                excluded.
-              </Trans>
             </View>
           </View>
         )}
+        <View style={{ fontSize: 12, color: theme.pageTextLight }}>
+          <Trans>
+            Principal and interest only; escrow, taxes, and insurance are
+            excluded.
+          </Trans>
+        </View>
       </View>
     </ReportCard>
   );

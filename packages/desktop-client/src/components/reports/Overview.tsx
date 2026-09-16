@@ -86,7 +86,11 @@ function getWidgetMinHeight(widget: DashboardWidgetEntity) {
     return 1;
   }
 
-  if (widget.type === 'sankey-card' || widget.type === 'mortgage-payoff-card') {
+  if (widget.type === 'mortgage-payoff-card') {
+    return 4;
+  }
+
+  if (widget.type === 'sankey-card') {
     return 3;
   }
 
@@ -300,7 +304,7 @@ export function Overview({ dashboard }: OverviewProps) {
         type,
         width: 4,
         height:
-          type === 'sankey-card' || type === 'mortgage-payoff-card' ? 3 : 2,
+          type === 'mortgage-payoff-card' ? 4 : type === 'sankey-card' ? 3 : 2,
         meta,
         dashboard_page_id: dashboard.id,
       },

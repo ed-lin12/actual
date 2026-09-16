@@ -39,6 +39,9 @@ export function calculateMortgagePayoff(
   }
 
   const payment = monthlyPayment + extraMonthlyPayment;
+  if (!Number.isFinite(payment)) {
+    return null;
+  }
   const monthlyRate = annualInterestRate / 100 / 12;
   let balance = principal;
   let totalInterest = 0;
@@ -58,7 +61,7 @@ export function calculateMortgagePayoff(
     months += 1;
   }
 
-  if (balance > 0) {
+  if (balance > 0 || !Number.isFinite(totalInterest)) {
     return null;
   }
 
