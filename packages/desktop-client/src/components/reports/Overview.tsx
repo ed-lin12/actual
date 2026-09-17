@@ -65,6 +65,7 @@ import { FormulaCard } from './reports/FormulaCard';
 import { MarkdownCard } from './reports/MarkdownCard';
 import { MissingReportCard } from './reports/MissingReportCard';
 import { MonteCarloCard } from './reports/monte-carlo/MonteCarloCard';
+import { MortgagePayoffCard } from './reports/MortgagePayoffCard';
 import { NetWorthCard } from './reports/NetWorthCard';
 import { SankeyCard } from './reports/SankeyCard';
 import { SpendingCard } from './reports/SpendingCard';
@@ -83,6 +84,10 @@ function getWidgetMinHeight(widget: DashboardWidgetEntity) {
     widget.type === 'formula-card'
   ) {
     return 1;
+  }
+
+  if (widget.type === 'mortgage-payoff-card') {
+    return 4;
   }
 
   if (widget.type === 'sankey-card') {
@@ -298,7 +303,8 @@ export function Overview({ dashboard }: OverviewProps) {
       widget: {
         type,
         width: 4,
-        height: type === 'sankey-card' ? 3 : 2,
+        height:
+          type === 'mortgage-payoff-card' ? 4 : type === 'sankey-card' ? 3 : 2,
         meta,
         dashboard_page_id: dashboard.id,
       },
@@ -651,6 +657,10 @@ export function Overview({ dashboard }: OverviewProps) {
                                 ]
                               : []),
                             {
+                              name: 'mortgage-payoff-card' as const,
+                              text: t('Mortgage payoff'),
+                            },
+                            {
                               name: 'custom-report' as const,
                               text: t('New custom report'),
                             },
@@ -927,6 +937,16 @@ export function Overview({ dashboard }: OverviewProps) {
                           <MonteCarloCard
                             widgetId={item.i}
                             isEditing={isEditing}
+                            meta={widget.meta}
+                            onMetaChange={newMeta =>
+                              onMetaChange(item, newMeta)
+                            }
+                          />
+                        ) : widget.type === 'mortgage-payoff-card' ? (
+                          <MortgagePayoffCard
+                            widgetId={item.i}
+                            isEditing={isEditing}
+                            accounts={accounts}
                             meta={widget.meta}
                             onMetaChange={newMeta =>
                               onMetaChange(item, newMeta)
